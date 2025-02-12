@@ -7,6 +7,7 @@ import logging
 import pathlib
 import sys
 from argparse import Namespace
+from typing import Any
 
 from prettytable import PrettyTable
 
@@ -190,12 +191,15 @@ CAMERA_W = CAMERA_H = 160
 
 class Setting:
     """Universal setting node."""
+    notification_method: str | None
 
     # pylint: disable=too-many-instance-attributes, disable=maybe-no-member
     # it's a cfg node,
 
     def __init__(self):
         """Initialize attributes and merge the configs."""
+        self.recipient = None | str
+        self.fishing_strategy = None
         self.window_controller = WindowController()
         self.coord_bases = self.window_controller.get_coord_bases()
         self.window_size = self.window_controller.get_window_size()
@@ -205,6 +209,7 @@ class Setting:
         self.snag_icon_position = None
         self.friction_brake_position = None
         self.reel_burning_icon_position = None
+        self.notification_method = None
 
         self.config = self._build_config()
         # build available profile table
@@ -220,7 +225,8 @@ class Setting:
         parent_dir = pathlib.Path(__file__).resolve().parents[1]
         self.image_dir = parent_dir / "static" / self.language
 
-    def _build_config(self) -> configparser.ConfigParser:
+    @staticmethod
+    def _build_config() -> configparser.ConfigParser:
         """Build a config and read the data from config.ini.
 
         :return: parsed config object
@@ -291,7 +297,7 @@ class Setting:
             print(table)
             sys.exit()
 
-    def _calculate_position(self, offset_key: str) -> None:
+    def _calculate_position(self, offset_key: str) -> tuple[int | Any, int | Any]:
         """Calculate absolute coordinates based on given key.
 
         :param offset_key: a key in offset dictionary

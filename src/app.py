@@ -41,7 +41,6 @@ HELP = (
     ("P", "save a chart of catch logs in logs/"),
     ("s", "shutdown computer after terminated without user interruption"),
     ("l", "lift the tackle constantly while pulling a fish"),
-    ("e", "send email to yourself after terminated without user interruption"),
     ("M", "send miaotixing notification after terminated without user interruption"),
     ("S", "take screenshots of every fish you catch and save them in screenshots/"),
     ("C", "skip rod casting for the first fish, support mode: spin, marine, wakey_rig"),
@@ -63,7 +62,6 @@ COMMON_ARGS = (
     ("plot", "plotting_enabled", "Plotting"),
     ("shutdown", "shutdown_enabled", "Shutdown"),
     ("lift", "lifting_enabled", "Lifting"),
-    ("email", "email_sending_enabled", "Email sending"),
     ("miaotixing", "miaotixing_sending_enabled", "miaotixing sending"),
     ("result_screenshot", "result_screenshot_enabled", "Result screenshot"),
     ("cast", "cast_skipping_enabled", "Cast skipping"),
@@ -106,8 +104,6 @@ class App:
         self._build_setting_args()
         self._verify_args()
 
-        if self.args.email and self.setting.SMTP_validation_enabled:
-            self._validate_smtp_connection()
         if self.setting.image_verification_enabled:
             self._verify_image_file_integrity()
 
@@ -247,37 +243,6 @@ class App:
         :rtype: bool
         """
         return pid.isdigit() and 0 <= int(pid) < len(self.setting.profile_names)
-
-    def _validate_smtp_connection(self) -> None:
-        """Validate email configuration in .env."""
-        logger.info("Validating SMTP connection")
-
-        load_dotenv()
-        email = os.getenv("EMAIL")
-        password = os.getenv("PASSWORD")
-        smtp_server_name = os.getenv("SMTP_SERVER")
-
-        if not smtp_server_name:
-            logger.error("SMTP_SERVER is not specified")
-            sys.exit()
-
-        try:
-            with smtplib.SMTP_SSL(smtp_server_name, 465) as smtp_server:
-                smtp_server.login(email, password)
-        except smtplib.SMTPAuthenticationError:
-            logger.error("Email address or password not accepted")
-            print(
-                (
-                    "Please configure your email address and password in .env\n"
-                    "If Gmail is used, please refer to "
-                    "https://support.google.com/accounts/answer/185833 \n"
-                    "to get more information about app password authentication"
-                )
-            )
-            sys.exit()
-        except (TimeoutError, gaierror):
-            logger.error("Invalid SMTP Server or connection timed out")
-            sys.exit()
 
     def _verify_image_file_integrity(self) -> None:
         """Verify the file integrity of static/{language}.

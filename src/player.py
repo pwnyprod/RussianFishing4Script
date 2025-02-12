@@ -745,33 +745,6 @@ class Player:
             table.add_row([column_name, attribute_value])
         return table
 
-    def send_email(self, table: PrettyTable) -> None:
-        """Send a notification email to the user's email address.
-
-        :param table: table consisting cause of termination and run-time records
-        :type table: PrettyTable
-        """
-        # get environment variables
-        load_dotenv()
-        sender = os.getenv("EMAIL")
-        password = os.getenv("PASSWORD")
-        smtp_server_name = os.getenv("SMTP_SERVER")
-
-        # configure mail info
-        msg = MIMEMultipart()
-        msg["Subject"] = "RussianFishing4Script: Notice of Program Termination"
-        msg["From"] = sender
-        recipients = [sender]
-        msg["To"] = ", ".join(recipients)
-        msg.attach(MIMEText(table.get_html_string(), "html"))
-
-        # send email with SMTP
-        with smtplib.SMTP_SSL(smtp_server_name, 465) as smtp_server:
-            # smtp_server.ehlo()
-            smtp_server.login(sender, password)
-            smtp_server.sendmail(sender, recipients, msg.as_string())
-        print("A notification email has been sent to your email address")
-
     def send_miaotixing(self, table: PrettyTable) -> None:
         """Send a notification Message to the user's miaotixing service."""
 
