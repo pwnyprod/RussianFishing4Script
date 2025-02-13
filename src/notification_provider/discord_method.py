@@ -16,7 +16,7 @@ class DiscordMethod(MessagingMethod):
         intents = discord.Intents.default()
         intents.message_content = True
 
-        self.client = discord.Client(intents=intents, token=os.getenv("discord_token"))
+        self.client = discord.Client(intents=intents, token=os.getenv("DISCORD_TOKEN"))
         self.recipient = recipient
 
     def send_message(self, message: str):
