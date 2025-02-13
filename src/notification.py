@@ -1,19 +1,14 @@
-"""
-Module for Messaging related methods.
-"""
-
-# pylint: disable=missing-function-docstring
-# docstring for every functions? u serious?
-
 import logging
 from abc import abstractmethod, ABC
 
 from notification_provider.abstract_messaging_method import MessagingMethod
 from notification_provider.discord_method import DiscordMethod
 from notification_provider.email_method import EmailMethod
+from notification_provider.miaotixing_method import MiaotixingMethod
 from notification_provider.null_method import NullMethod
-from notification_provider.telegram_method import TelegramMethod
+from notification_provider.plot_method import PlotMethod
 from setting import Setting
+from timer import Timer
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +20,18 @@ class Notification:
     def __init__(self, settings: Setting):
         self.setting = settings
         self.recipient = settings.recipient
+        self.method = settings.method
 
     # pylint: disable=too-many-public-methods
     @staticmethod
-    def get_messaging_method(self) -> MessagingMethod:
+    def get_messaging_method(self, timer: Timer) -> MessagingMethod:
         if self.method == "email":
             return EmailMethod(self.recipient)
         elif self.method == "discord":
             return DiscordMethod(self.recipient)
-        elif self.method == "telegram":
-            return TelegramMethod(self.recipient)
+        elif self.method == "miaotixing":
+            return MiaotixingMethod()
+        elif self.method == "plot":
+            return PlotMethod(timer)
         else:
             return NullMethod()

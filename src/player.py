@@ -2,11 +2,9 @@
 Module for Player class.
 """
 
-import json
 import logging
 import os
 import random
-import smtplib
 import sys
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
@@ -29,6 +27,7 @@ import exceptions
 import script
 from frictionbrake import FrictionBrake
 from monitor import Monitor
+from notification import Notification
 from setting import Setting
 from tackle import Tackle
 from timer import Timer
@@ -54,6 +53,7 @@ SCREENSHOT_DELAY = 2
 
 class Player:
     """Main interface of fishing loops and stages."""
+    timer: Timer
 
     # pylint: disable=too-many-instance-attributes, disable=no-member
     # there are too many counters...
@@ -474,7 +474,7 @@ class Player:
                 raise ValueError
 
     def _handle_termination(self, msg: str, shutdown: bool) -> None:
-        """Send email and plot diagram, quit the game if necessary
+        """Send notification, quit the game if necessary
 
         :param msg: quit message
         :type msg:
@@ -482,12 +482,9 @@ class Player:
         :type shutdown: bool
         """
         result = self.gen_result(msg)
-        if self.setting.email_sending_enabled:
-            self.send_email(result)
-        if self.setting.miaotixing_sending_enabled:
-            self.send_miaotixing(result)
-        if self.setting.plotting_enabled:
-            self.plot_and_save()
+
+        Notification(self.setting).get_messaging_method(self.timer).send_message(result.get_html_string())
+
         if shutdown and self.setting.shutdown_enabled:
             os.system("shutdown /s /t 5")
         print(result)
@@ -745,63 +742,6 @@ class Player:
             table.add_row([column_name, attribute_value])
         return table
 
-    def send_miaotixing(self, table: PrettyTable) -> None:
-        """Send a notification Message to the user's miaotixing service."""
-
-        # Prepare the data to be sent as query parameters
-        data_dict = {}
-        for row in table.rows:
-            column_name, attribute_value = row
-            data_dict[column_name] = attribute_value
-
-        load_dotenv()
-        miao_code = os.getenv("MIAO_CODE")
-
-        # Customizable Text Prompt Message
-        text = (
-            "Cause of termination:"
-            + data_dict["Cause of termination"]
-            + "\nStart time:"
-            + data_dict["Start time"]
-            + "\nFinish time:"
-            + data_dict["Finish time"]
-            + "\nRunning time:"
-            + data_dict["Running time"]
-            + "\nFish caught:"
-            + str(data_dict["Fish caught"])
-            + "\nMarked / Unmarked / Mark ratio:"
-            + data_dict["Marked / Unmarked / Mark ratio"]
-            + "\nHit / Miss / Bite ratio:"
-            + data_dict["Hit / Miss / Bite ratio"]
-            + "\nAlcohol consumed:"
-            + str(data_dict["Alcohol consumed"])
-            + "\nCoffee consumed:"
-            + str(data_dict["Coffee consumed"])
-            + "\nTea consumed:"
-            + str(data_dict["Tea consumed"])
-            + "\nCarrot consumed:"
-            + str(data_dict["Carrot consumed"])
-            + "\nHarvest baits count:"
-            + str(data_dict["Harvest baits count"])
-        )
-
-        url = "http://miaotixing.com/trigger?" + parse.urlencode(
-            {"id": miao_code, "text": text, "type": "json"}
-        )
-
-        with request.urlopen(url) as page:
-            result = page.read()
-            json_object = json.loads(result)
-            if json_object["code"] == 0:
-                print("A notification message to the user's miaotixing service.")
-            else:
-                print(
-                    "Sending failed with error code:"
-                    + str(json_object["code"])
-                    + ", Description:"
-                    + json_object["msg"]
-                )
-
     def save_screenshot(self) -> None:
         """Save screenshot to screenshots/."""
         # datetime.now().strftime("%H:%M:%S")
@@ -811,39 +751,6 @@ class Player:
             imageFilename=rf"../screenshots/{self.timer.get_cur_timestamp()}.png",
             region=(left, top, width, height),
         )
-
-    def plot_and_save(self) -> None:
-        """Plot and save an image using rhour and ghour list from timer object."""
-        if self.keep_fish_count == 0:
-            return
-
-        cast_rhour_list, cast_ghour_list = self.timer.get_cast_hour_list()
-        _, ax = plt.subplots(nrows=1, ncols=2)
-        # _.canvas.manager.set_window_title('Record')
-        ax[0].set_ylabel("Fish")
-
-        last_rhour = cast_rhour_list[-1]  # hour: 0, 1, 2, 3, 4, "5"
-        fish_per_rhour = [0] * (last_rhour + 1)  # idx: #(0, 1, 2, 3, 4, 5) = 6
-        for hour in cast_rhour_list:
-            fish_per_rhour[hour] += 1
-        ax[0].plot(range(last_rhour + 1), fish_per_rhour)
-        ax[0].set_title("Fish Caughted per Real Hour")
-        ax[0].set_xticks(range(last_rhour + 2))
-        ax[0].set_xlabel("Hour (real running time)")
-        ax[0].yaxis.set_major_locator(MaxNLocator(integer=True))
-
-        fish_per_ghour = [0] * 24
-        for hour in cast_ghour_list:
-            fish_per_ghour[hour] += 1
-        ax[1].bar(range(0, 24), fish_per_ghour)
-        ax[1].set_title("Fish Caughted per Game Hour")
-        ax[1].set_xticks(range(0, 24, 2))
-        ax[1].set_xlabel("Hour (game time)")
-        ax[1].yaxis.set_major_locator(MaxNLocator(integer=True))
-
-        # plt.tight_layout()
-        plt.savefig(f"../logs/{self.timer.get_cur_timestamp()}.png")
-        print("The Plot has been saved under logs/")
 
     def _handle_expired_ticket(self):
         """Select and use the ticket according to boat_ticket_duration argument."""

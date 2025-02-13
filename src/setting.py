@@ -198,6 +198,7 @@ class Setting:
 
     def __init__(self):
         """Initialize attributes and merge the configs."""
+        self.method = None | str
         self.recipient = None | str
         self.fishing_strategy = None
         self.window_controller = WindowController()

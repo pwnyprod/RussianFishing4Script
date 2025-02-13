@@ -22,11 +22,10 @@ class EmailMethod(MessagingMethod):
         self.sender = os.getenv("EMAIL")
         self._validate_smtp_connection()
 
-    def send_message(self, message: str):
+    def send_message(self, message: str) -> None:
         msg = MIMEMultipart()
-        msg["Subject"] = "RussianFishing4Script: Notice of Program Termination"
+        msg["Subject"] = "RussianFishing4Script: Notification"
         msg["From"] = self.sender
-        recipients = [self.sender]
         msg["To"] = self.recipient
         msg.attach(MIMEText(message, "html"))
 
@@ -36,18 +35,13 @@ class EmailMethod(MessagingMethod):
             smtp_server.login(self.sender, self.password)
             smtp_server.sendmail(self.sender, self.recipient, msg.as_string())
         print("A notification email has been sent to your email address")
-        pass
 
     def _validate_smtp_connection(self) -> None:
         """Validate email configuration in .env."""
         logger.info("Validating SMTP connection")
-
-
-
         if not self.smtp_server_name:
             logger.error("SMTP_SERVER is not specified")
             sys.exit()
-
         try:
             with smtplib.SMTP_SSL(self.smtp_server_name, 465) as smtp_server:
                 smtp_server.login(self.sender, self.password)

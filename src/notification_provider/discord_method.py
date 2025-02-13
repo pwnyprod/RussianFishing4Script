@@ -1,10 +1,24 @@
-from notification_provider.abstract_messaging_method import MessagingMethod
+import os
 
+from discord import Client
+from discord.abc import Snowflake
+from dotenv import load_dotenv
+
+from notification_provider.abstract_messaging_method import MessagingMethod
+import discord
 
 class DiscordMethod(MessagingMethod):
-    def __init__(self):
-        pass
+    recipient: str | Snowflake
+    client: Client
+
+    def __init__(self, recipient: str):
+        load_dotenv()
+        intents = discord.Intents.default()
+        intents.message_content = True
+
+        self.client = discord.Client(intents=intents, token=os.getenv("discord_token"))
+        self.recipient = recipient
 
     def send_message(self, message: str):
-        # Implement Discord sending logic here
-        pass
+        dm_channel = self.client.create_dm(self.recipient)
+        dm_channel.send(message)
