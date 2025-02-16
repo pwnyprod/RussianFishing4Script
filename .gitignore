@@ -9,7 +9,6 @@ screenshots/
 logs/
 tests/
 
-start.bat
 .env
 config.ini
 TODO.md
