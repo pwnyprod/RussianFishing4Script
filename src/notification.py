@@ -23,7 +23,6 @@ class Notification:
         self.method = settings.method
 
     # pylint: disable=too-many-public-methods
-    @staticmethod
     def get_messaging_method(self, timer: Timer) -> MessagingMethod:
         if self.method == "email":
             return EmailMethod(self.recipient)
