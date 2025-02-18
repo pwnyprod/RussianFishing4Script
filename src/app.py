@@ -23,6 +23,7 @@ from prettytable import PrettyTable
 from pynput import keyboard
 
 import script
+from notification import Notification
 from player import Player
 from setting import COMMON_CONFIGS, SPECIAL_CONFIGS, Setting
 
@@ -96,7 +97,7 @@ class App:
         """Merge args into setting node."""
         self.setting = None  # dummy setting, parse args first for help message
         self.pid = None
-        self.player = None
+        self.player: Player
         self.table = None
 
         self._build_setting_args()
@@ -406,7 +407,7 @@ if __name__ == "__main__":
     # app.player.friction_brake_monitor_process.join()
     pag.keyUp("shift")  # avoid Shift key stuck
     print(app.player.gen_result("Terminated by user"))
-    if app.setting.plotting_enabled:
-        app.player.plot_and_save()
+    Notification(app.setting).get_messaging_method(app.player.timer).send_message(app.player.gen_result("Terminated by user").get_html_string())
+
 
 # CTRL_C_EVENT: https://stackoverflow.com/questions/58455684/
