@@ -1,7 +1,7 @@
 <div align="center">
 
 ![RF4S][RF4S logo]
-<h1 align="center">RF4S</h1>
+<h1 align="center">RF4S (modified)</h1>
 
 **A simple bot for Russian Fishing 4, supporting spin, bottom, marine, and float fishing.**
 
