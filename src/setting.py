@@ -196,16 +196,12 @@ class Setting:
     snag_icon_position: tuple[int, int]
     fish_icon_position: tuple[int, int]
     retrieval_detect_confidence: float
-    notification_method: str | None
 
     # pylint: disable=too-many-instance-attributes, disable=maybe-no-member
     # it's a cfg node,
 
     def __init__(self):
         """Initialize attributes and merge the configs."""
-        self.method = None | str
-        self.recipient = None | str
-        self.fishing_strategy = None
         self.window_controller = WindowController()
         self.coord_bases = self.window_controller.get_coord_bases()
         self.window_size = self.window_controller.get_window_size()
